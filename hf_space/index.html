@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Delivery Time Predictor — ML Regression Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --border: rgba(148, 163, 184, 0.2);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-dark: #1d4ed8;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 1.25rem 1.5rem 3rem; }
+    .hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1d4ed8 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.6rem 2rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .hero h1 { margin: 0 0 0.35rem; font-size: 1.85rem; }
+    .hero p { margin: 0; color: #cbd5e1; max-width: 760px; font-size: 0.96rem; }
+    .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .badge {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.4rem;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 0.75rem 1.15rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: #60a5fa; border-bottom-color: #3b82f6; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1.35fr; gap: 1.25rem; align-items: start; }
+    .grid-equal { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.15rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 0.9rem; margin-bottom: 1.25rem; }
+    @media (max-width: 900px) {
+      .grid-2, .grid-equal { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.15rem;
+    }
+    .card h2, .card h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1.1rem; }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.95rem 1.1rem;
+    }
+    .kpi .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi .value { font-size: 1.45rem; font-weight: 800; margin-top: 0.2rem; }
+    .kpi .sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+    .pred-banner {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-radius: 14px;
+      padding: 1.4rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    }
+    .pred-banner .pred-value { font-size: 3rem; font-weight: 800; line-height: 1.1; margin: 0.2rem 0; }
+    .pred-banner .pred-sub { font-size: 0.92rem; color: #dbeafe; }
+    .field { margin-bottom: 1rem; }
+    .field label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .field label span { color: #60a5fa; font-family: ui-monospace, monospace; }
+    input[type="range"] { width: 100%; accent-color: #3b82f6; cursor: pointer; }
+    select, input[type="file"] {
+      width: 100%;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.92rem;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .full-fields { display: none; border-top: 1px dashed var(--border); padding-top: 0.9rem; margin-top: 0.6rem; }
+    .full-fields.visible { display: block; }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-secondary { background: var(--surface-2); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #334155; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    th, td { padding: 0.6rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: #93c5fd; font-weight: 600; background: rgba(30, 41, 59, 0.6); }
+    tr.highlight { background: rgba(37, 99, 235, 0.16); font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+    .plot-img { width: 100%; border-radius: 10px; border: 1px solid var(--border); background: #fff; }
+    .insight-box {
+      background: rgba(37, 99, 235, 0.1);
+      border-left: 4px solid #3b82f6;
+      padding: 0.9rem 1.1rem;
+      border-radius: 8px;
+      margin-bottom: 0.8rem;
+      font-size: 0.94rem;
+    }
+    .chip-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .chip {
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .chip.active { background: #2563eb; border-color: #3b82f6; }
+    footer { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div>
+        <h1>🛵 Food Delivery Time Prediction Dashboard</h1>
+        <p>Predict exact delivery time (in minutes) from distance, traffic level, weather, and restaurant preparation time — powered by leak-free scikit-learn regression pipelines with 90% empirical prediction intervals.</p>
+      </div>
+      <div class="badge-row">
+        <span class="badge">Best Core-4: LinearRegression</span>
+        <span class="badge">Test MAE: 5.85 min</span>
+        <span class="badge">Test R²: 0.8296</span>
+        <span class="badge">1,000 Orders · 70/15/15 Split</span>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="predict">🎯 Predict Delivery Time</button>
+      <button class="tab-btn" data-tab="eda">📊 Data & EDA</button>
+      <button class="tab-btn" data-tab="eval">📈 Model Evaluation & Comparison</button>
+      <button class="tab-btn" data-tab="insights">💡 Feature Importance & Insights</button>
+    </div>
+
+    <!-- TAB 1: PREDICT -->
+    <section id="tab-predict" class="tab-panel active">
+      <div class="grid-2">
+        <div class="card">
+          <h2>Order Parameters</h2>
+          <label class="toggle-row">
+            <input type="checkbox" id="fullModeToggle" />
+            Enable Full-Feature Mode (7 features)
+          </label>
+
+          <div class="field">
+            <label for="distance">Distance (km) <span id="distanceVal">10.0 km</span></label>
+            <input type="range" id="distance" min="0.5" max="25.0" step="0.1" value="10.0" />
+          </div>
+
+          <div class="field">
+            <label for="prepTime">Restaurant Preparation Time (min) <span id="prepTimeVal">15 min</span></label>
+            <input type="range" id="prepTime" min="5" max="45" step="1" value="15" />
+          </div>
+
+          <div class="grid-equal">
+            <div class="field">
+              <label for="traffic">Traffic Level</label>
+              <select id="traffic">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="weather">Weather</label>
+              <select id="weather">
+                <option value="Clear" selected>Clear</option>
+                <option value="Windy">Windy</option>
+                <option value="Foggy">Foggy</option>
+                <option value="Rainy">Rainy</option>
+                <option value="Snowy">Snowy</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="fullFields" class="full-fields">
+            <div class="grid-equal">
+              <div class="field">
+                <label for="timeOfDay">Time of Day</label>
+                <select id="timeOfDay">
+                  <option value="Morning">Morning</option>
+                  <option value="Afternoon">Afternoon</option>
+                  <option value="Evening" selected>Evening</option>
+                  <option value="Night">Night</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="vehicle">Vehicle Type</label>
+                <select id="vehicle">
+                  <option value="Bike">Bike</option>
+                  <option value="Scooter" selected>Scooter</option>
+                  <option value="Car">Car</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="experience">Courier Experience (years) <span id="experienceVal">4.0 yrs</span></label>
+              <input type="range" id="experience" min="0" max="15" step="0.5" value="4.0" />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="pred-banner">
+            <div class="pred-sub" id="predModeLabel">Predicted Delivery Time (CORE · LinearRegression)</div>
+            <div class="pred-value" id="predValue">-- min</div>
+            <div class="pred-sub">Estimated 90% Range: <strong id="predRange">--</strong></div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi">
+              <div class="label">Lower Bound (90% PI)</div>
+              <div class="value" id="kpiLow">--</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Upper Bound (90% PI)</div>
+              <div class="value" id="kpiHigh">--</div>
+            </div>
+            <div class="kpi">
+              <div class="label">vs Dataset Average</div>
+              <div class="value" id="kpiDelta">--</div>
+              <div class="sub">Dataset mean: 56.7 min</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div id="gaugeChart" style="height: 270px;"></div>
+          </div>
+          <div class="card">
+            <div id="benchmarkChart" style="height: 250px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Batch CSV Prediction (Client-Side)</h3>
+        <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0;">
+          Upload a CSV with columns <code>Distance_km, Traffic_Level, Weather, Preparation_Time_min</code> (and optional Full-7 columns) to generate instant batch predictions.
+        </p>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.9rem;">
+          <button class="btn btn-secondary" id="downloadTemplateBtn">Download Sample CSV</button>
+          <input type="file" id="csvUpload" accept=".csv" style="max-width: 340px;" />
+          <button class="btn" id="downloadPredsBtn" style="display: none;">Download Predictions CSV</button>
+        </div>
+        <div id="batchStatus" style="font-size: 0.88rem; color: #93c5fd; margin-bottom: 0.5rem;"></div>
+        <div id="batchTableWrap" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: DATA & EDA -->
+    <section id="tab-eda" class="tab-panel">
+      <div class="kpi-grid" id="edaKpis"></div>
+      <div class="grid-equal">
+        <div class="card"><h3>Target Distribution & Outliers</h3><img class="plot-img" src="plots/01_target_distribution.png" alt="Target distribution" /></div>
+        <div class="card"><h3>Missing Values Analysis</h3><img class="plot-img" src="plots/02_missing_values.png" alt="Missing values" /></div>
+        <div class="card"><h3>Feature Relationships</h3><img class="plot-img" src="plots/03_feature_relationships.png" alt="Feature relationships" /></div>
+        <div class="card"><h3>Feature Correlation Heatmap</h3><img class="plot-img" src="plots/04_correlation_heatmap.png" alt="Correlation heatmap" /></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: EVALUATION -->
+    <section id="tab-eval" class="tab-panel">
+      <div class="kpi-grid" id="evalKpis"></div>
+      <div class="card">
+        <h3>Model Comparison Table (8 Core-4 Candidates + Full-7 Benchmark)</h3>
+        <div class="table-wrap" id="modelTableWrap"></div>
+      </div>
+      <div class="card">
+        <h3>Actual vs Predicted Delivery Time (Interactive)</h3>
+        <div class="chip-group" id="splitChips">
+          <button class="chip" data-split="train">Train (700)</button>
+          <button class="chip active" data-split="val">Validation (150)</button>
+          <button class="chip active" data-split="test">Test (150)</button>
+        </div>
+        <div id="avpChart" style="height: 420px;"></div>
+      </div>
+      <div class="grid-equal">
+        <div class="card"><div id="resScatterChart" style="height: 360px;"></div></div>
+        <div class="card"><div id="resHistChart" style="height: 360px;"></div></div>
+      </div>
+      <div class="grid-equal">
+        <div class="card"><div id="sliceWeatherChart" style="height: 340px;"></div></div>
+        <div class="card"><div id="sliceTrafficChart" style="height: 340px;"></div></div>
+      </div>
+      <div class="grid-equal">
+        <div class="card"><h3>Model Comparison (Static)</h3><img class="plot-img" src="plots/05_model_comparison.png" alt="Model comparison" /></div>
+        <div class="card"><h3>Residual Diagnostics & Q-Q Plot</h3><img class="plot-img" src="plots/07_residual_analysis.png" alt="Residual analysis" /></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: INSIGHTS -->
+    <section id="tab-insights" class="tab-panel">
+      <div class="card">
+        <h3>Permutation Feature Importance (Holdout Test Set)</h3>
+        <div class="chip-group">
+          <button class="chip active" id="impCoreBtn">Core-4 Production Model</button>
+          <button class="chip" id="impFullBtn">Full-7 Benchmark Model</button>
+        </div>
+        <div id="importanceChart" style="height: 390px;"></div>
+      </div>
+      <div class="card">
+        <h3>Key Takeaways & Data Story</h3>
+        <div class="insight-box"><strong>1. Distance Dominates Delivery Time (+13.90 min MAE impact):</strong> <code>Distance_km</code> has a strong linear correlation with delivery duration (r = 0.78) and is by far the most influential predictor.</div>
+        <div class="insight-box"><strong>2. Restaurant Preparation Time Is #2 (+4.03 min MAE impact):</strong> <code>Preparation_Time_min</code> adds directly to total fulfillment time (r = 0.31). Reducing kitchen bottlenecks is the clearest operational lever.</div>
+        <div class="insight-box"><strong>3. Traffic & Weather Drive Contextual Delays (+1.56 & +0.86 min MAE impact):</strong> High traffic adds substantial travel overhead over Low traffic, while Snowy and Rainy conditions add consistent weather penalties.</div>
+        <div class="insight-box"><strong>4. Core-4 Simplicity Wins in Production:</strong> Adding <code>Time_of_Day</code>, <code>Vehicle_Type</code>, and <code>Courier_Experience_yrs</code> improves holdout test MAE by only <strong>0.19 min</strong> (5.85 → 5.66 min). Linear regression outperforms tree ensembles and SVR because the underlying delivery time process is predominantly additive.</div>
+      </div>
+      <div class="card">
+        <h3>Static Permutation Importance Comparison</h3>
+        <img class="plot-img" src="plots/08_feature_importance.png" alt="Feature importance" />
+      </div>
+    </section>
+
+    <footer>
+      Built with leak-free scikit-learn pipelines · Hosted on Hugging Face Spaces
+    </footer>
+  </div>
+
+  <script>
+    let BUNDLE = null;
+    let LAST_BATCH_CSV = "";
+    const DARK_LAYOUT = {
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: "rgba(15,23,42,0.45)",
+      font: { color: "#e2e8f0", family: "Inter, sans-serif" },
+      xaxis: { gridcolor: "rgba(148,163,184,0.15)" },
+      yaxis: { gridcolor: "rgba(148,163,184,0.15)" },
+    };
+
+    function predictClientSide(inputs, mode) {
+      const spec = BUNDLE.models[mode];
+      let total = spec.intercept;
+      const coefs = spec.coefs;
+
+      spec.num.columns.forEach((col, idx) => {
+        const raw = inputs[col];
+        const isMissing = raw === null || raw === undefined || raw === "" || Number.isNaN(Number(raw));
+        const val = isMissing ? spec.num.medians[idx] : Number(raw);
+        const z = (val - spec.num.means[idx]) / spec.num.scales[idx];
+        total += coefs["num__" + col] * z;
+      });
+
+      const missKey = "num__missingindicator_Courier_Experience_yrs";
+      if (missKey in coefs) {
+        const idxMiss = spec.num.columns.length;
+        const rawExp = inputs.Courier_Experience_yrs;
+        const missVal = (rawExp === null || rawExp === undefined || rawExp === "" || Number.isNaN(Number(rawExp))) ? 1.0 : 0.0;
+        const zMiss = (missVal - spec.num.means[idxMiss]) / spec.num.scales[idxMiss];
+        total += coefs[missKey] * zMiss;
+      }
+
+      const traffic = inputs.Traffic_Level || spec.ord.mode_value;
+      const ordPos = spec.ord.categories.indexOf(traffic);
+      const ordIdx = ordPos >= 0 ? ordPos : 1.0;
+      const zOrd = (ordIdx - spec.ord.mean) / spec.ord.scale;
+      total += coefs["ord__Traffic_Level"] * zOrd;
+
+      spec.cat.columns.forEach((col) => {
+        const val = inputs[col] || "Unknown";
+        const key = "cat__" + col + "_" + val;
+        if (key in coefs) total += coefs[key];
+      });
+
+      const pred = Math.max(1.0, total);
+      const hw = spec.pi_90_half_width;
+      return {
+        predicted_minutes: Number(pred.toFixed(2)),
+        lower_bound: Number(Math.max(1.0, pred - hw).toFixed(2)),
+        upper_bound: Number((pred + hw).toFixed(2)),
+        model_name: spec.model_name,
+        mode,
+      };
+    }
+
+    function updatePrediction() {
+      if (!BUNDLE) return;
+      const fullMode = document.getElementById("fullModeToggle").checked;
+      document.getElementById("fullFields").classList.toggle("visible", fullMode);
+
+      const distance = Number(document.getElementById("distance").value);
+      const prepTime = Number(document.getElementById("prepTime").value);
+      const traffic = document.getElementById("traffic").value;
+      const weather = document.getElementById("weather").value;
+      const timeOfDay = document.getElementById("timeOfDay").value;
+      const vehicle = document.getElementById("vehicle").value;
+      const experience = Number(document.getElementById("experience").value);
+
+      document.getElementById("distanceVal").textContent = distance.toFixed(1) + " km";
+      document.getElementById("prepTimeVal").textContent = prepTime + " min";
+      document.getElementById("experienceVal").textContent = experience.toFixed(1) + " yrs";
+
+      const mode = fullMode ? "full" : "core";
+      const res = predictClientSide({
+        Distance_km: distance,
+        Preparation_Time_min: prepTime,
+        Traffic_Level: traffic,
+        Weather: weather,
+        Time_of_Day: timeOfDay,
+        Vehicle_Type: vehicle,
+        Courier_Experience_yrs: experience,
+      }, mode);
+
+      const datasetMean = BUNDLE.eda.numeric_summary.Delivery_Time_min.mean;
+      const delta = res.predicted_minutes - datasetMean;
+
+      document.getElementById("predModeLabel").textContent = `Predicted Delivery Time (${mode.toUpperCase()} · ${res.model_name})`;
+      document.getElementById("predValue").textContent = res.predicted_minutes.toFixed(1) + " min";
+      document.getElementById("predRange").textContent = `${res.lower_bound.toFixed(1)} – ${res.upper_bound.toFixed(1)} min`;
+      document.getElementById("kpiLow").textContent = res.lower_bound.toFixed(1) + " min";
+      document.getElementById("kpiHigh").textContent = res.upper_bound.toFixed(1) + " min";
+      document.getElementById("kpiDelta").textContent = `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} min`;
+      document.getElementById("kpiDelta").style.color = delta > 0 ? "#f87171" : "#34d399";
+
+      Plotly.react("gaugeChart", [{
+        type: "indicator",
+        mode: "gauge+number+delta",
+        value: res.predicted_minutes,
+        delta: { reference: datasetMean, suffix: " min", increasing: { color: "#ef4444" }, decreasing: { color: "#10b981" } },
+        title: { text: `Predicted ETA vs Dataset Mean (${datasetMean.toFixed(1)} min)`, font: { size: 14, color: "#e2e8f0" } },
+        number: { suffix: " min", font: { size: 30, color: "#f8fafc" } },
+        gauge: {
+          axis: { range: [0, 140], tickcolor: "#94a3b8" },
+          bar: { color: "#3b82f6" },
+          bgcolor: "#0f172a",
+          steps: [
+            { range: [0, 40], color: "rgba(16,185,129,0.28)" },
+            { range: [40, 75], color: "rgba(245,158,11,0.28)" },
+            { range: [75, 140], color: "rgba(239,68,68,0.28)" },
+          ],
+          threshold: { line: { color: "#f8fafc", width: 3 }, thickness: 0.75, value: datasetMean },
+        },
+      }], { ...DARK_LAYOUT, margin: { l: 25, r: 25, t: 45, b: 10 } }, { responsive: true });
+
+      const weatherAvg = (BUNDLE.eda.target_by_weather[weather]?.mean) ?? datasetMean;
+      const trafficAvg = (BUNDLE.eda.target_by_traffic[traffic]?.mean) ?? datasetMean;
+      const labels = ["Overall Dataset Avg", `${traffic} Traffic Avg`, `${weather} Weather Avg`, "This Prediction"];
+      const vals = [datasetMean, trafficAvg, weatherAvg, res.predicted_minutes];
+      const colors = ["#64748b", "#f59e0b", "#0ea5e9", "#3b82f6"];
+
+      Plotly.react("benchmarkChart", [{
+        type: "bar",
+        orientation: "h",
+        x: vals,
+        y: labels,
+        text: vals.map((v) => v.toFixed(1) + " min"),
+        textposition: "outside",
+        marker: { color: colors },
+      }], {
+        ...DARK_LAYOUT,
+        title: { text: "Prediction vs Historical Benchmarks", font: { size: 14 } },
+        margin: { l: 145, r: 50, t: 40, b: 30 },
+        xaxis: { ...DARK_LAYOUT.xaxis, title: "Delivery Time (min)", range: [0, Math.max(...vals) * 1.24] },
+      }, { responsive: true });
+    }
+
+    function renderStaticTabs() {
+      const eda = BUNDLE.eda;
+      const metrics = BUNDLE.metrics;
+      const best = metrics.best_core_model;
+      const full = metrics.full_benchmark_model;
+      const ts = eda.numeric_summary.Delivery_Time_min;
+
+      document.getElementById("edaKpis").innerHTML = [
+        ["Total Orders", eda.dataset_shape.rows.toLocaleString(), "9 columns"],
+        ["Mean Delivery Time", ts.mean.toFixed(1) + " min", "Std: " + ts.std.toFixed(1) + " min"],
+        ["Median Delivery Time", ts.median.toFixed(1) + " min", `Range: ${ts.min}–${ts.max} min`],
+        ["Missing Cells", `${eda.total_missing_cells}`, `${eda.rows_with_any_missing} rows imputed in-pipeline`],
+        ["IQR Target Outliers", `${eda.anomalies.target_outlier_count}`, "Retained & monitored"],
+      ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+      const ci = best.test_bootstrap_95ci;
+      document.getElementById("evalKpis").innerHTML = [
+        ["Core-4 Test MAE", best.test.mae.toFixed(2) + " min", `95% CI: [${ci.mae.lower.toFixed(2)}, ${ci.mae.upper.toFixed(2)}]`],
+        ["Core-4 Test RMSE", best.test.rmse.toFixed(2) + " min", `95% CI: [${ci.rmse.lower.toFixed(2)}, ${ci.rmse.upper.toFixed(2)}]`],
+        ["Core-4 Test R²", best.test.r2.toFixed(4), `95% CI: [${ci.r2.lower.toFixed(4)}, ${ci.r2.upper.toFixed(4)}]`],
+        ["Full-7 Benchmark MAE", full.test.mae.toFixed(2) + " min", `Delta: ${metrics.core_vs_full_test_delta.mae_diff_full_minus_core.toFixed(2)} min`],
+      ].map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="sub">${s}</div></div>`).join("");
+
+      const rows = [...metrics.core_model_comparison]
+        .sort((a, b) => a.val.rmse - b.val.rmse)
+        .map((m) => {
+          const isBest = m.model_name === best.model_name;
+          return `<tr class="${isBest ? "highlight" : ""}">
+            <td>${m.model_name}${isBest ? " ★" : ""}</td>
+            <td>Core-4</td>
+            <td>${m.cv_5fold.rmse_mean.toFixed(2)} ± ${m.cv_5fold.rmse_std.toFixed(2)}</td>
+            <td>${m.train.mae.toFixed(2)}</td>
+            <td>${m.val.mae.toFixed(2)}</td>
+            <td>${m.val.rmse.toFixed(2)}</td>
+            <td>${m.val.r2.toFixed(4)}</td>
+            <td>${isBest ? best.test.mae.toFixed(2) : "—"}</td>
+            <td>${isBest ? best.test.rmse.toFixed(2) : "—"}</td>
+            <td>${isBest ? best.test.r2.toFixed(4) : "—"}</td>
+          </tr>`;
+        });
+      rows.push(`<tr class="highlight">
+        <td>${full.model_name} (Benchmark)</td><td>Full-7</td>
+        <td>${full.cv_5fold.rmse_mean.toFixed(2)} ± ${full.cv_5fold.rmse_std.toFixed(2)}</td>
+        <td>${full.train.mae.toFixed(2)}</td><td>${full.val.mae.toFixed(2)}</td>
+        <td>${full.val.rmse.toFixed(2)}</td><td>${full.val.r2.toFixed(4)}</td>
+        <td>${full.test.mae.toFixed(2)}</td><td>${full.test.rmse.toFixed(2)}</td><td>${full.test.r2.toFixed(4)}</td>
+      </tr>`);
+      document.getElementById("modelTableWrap").innerHTML = `<table>
+        <thead><tr><th>Model</th><th>Features</th><th>5-Fold CV RMSE</th><th>Train MAE</th><th>Val MAE</th><th>Val RMSE</th><th>Val R²</th><th>Test MAE</th><th>Test RMSE</th><th>Test R²</th></tr></thead>
+        <tbody>${rows.join("")}</tbody></table>`;
+
+      renderAvpChart();
+      renderResidualsAndSlices();
+      renderImportanceChart("core");
+    }
+
+    function renderAvpChart() {
+      const activeSplits = new Set(
+        Array.from(document.querySelectorAll("#splitChips .chip.active")).map((b) => b.dataset.split)
+      );
+      const colors = { train: "#94a3b8", val: "#0ea5e9", test: "#3b82f6" };
+      const traces = ["train", "val", "test"]
+        .filter((s) => activeSplits.size === 0 || activeSplits.has(s))
+        .map((s) => {
+          const pts = BUNDLE.predictions.filter((p) => p.split === s);
+          return {
+            type: "scatter",
+            mode: "markers",
+            name: s.toUpperCase(),
+            x: pts.map((p) => p.actual),
+            y: pts.map((p) => p.predicted_core),
+            text: pts.map((p) => `Order #${p.Order_ID}<br>Dist: ${p.Distance_km} km | Prep: ${p.Preparation_Time_min} min<br>Traffic: ${p.Traffic_Level} | Weather: ${p.Weather}<br>Residual: ${p.residual_core.toFixed(1)} min`),
+            hovertemplate: "Actual: %{x:.1f} min<br>Predicted: %{y:.1f} min<br>%{text}<extra></extra>",
+            marker: { color: colors[s], size: 7, opacity: 0.78 },
+          };
+        });
+      traces.push({
+        type: "scatter", mode: "lines", name: "Ideal (y = x)",
+        x: [5, 145], y: [5, 145],
+        line: { color: "#ef4444", dash: "dash", width: 2 },
+      });
+      Plotly.react("avpChart", traces, {
+        ...DARK_LAYOUT,
+        margin: { l: 55, r: 20, t: 25, b: 45 },
+        xaxis: { ...DARK_LAYOUT.xaxis, title: "Actual Delivery Time (min)" },
+        yaxis: { ...DARK_LAYOUT.yaxis, title: "Predicted Delivery Time (min)" },
+      }, { responsive: true });
+    }
+
+    function renderResidualsAndSlices() {
+      const testPts = BUNDLE.predictions.filter((p) => p.split === "test");
+      Plotly.react("resScatterChart", [{
+        type: "scatter", mode: "markers",
+        x: testPts.map((p) => p.predicted_core),
+        y: testPts.map((p) => p.residual_core),
+        marker: { color: "#38bdf8", size: 7, opacity: 0.8 },
+        name: "Test Residuals",
+      }], {
+        ...DARK_LAYOUT,
+        title: { text: "Test Residuals vs Predicted", font: { size: 14 } },
+        shapes: [{ type: "line", x0: 10, x1: 120, y0: 0, y1: 0, line: { color: "#ef4444", dash: "dash" } }],
+        xaxis: { ...DARK_LAYOUT.xaxis, title: "Predicted (min)" },
+        yaxis: { ...DARK_LAYOUT.yaxis, title: "Residual (Actual − Predicted)" },
+        margin: { l: 55, r: 20, t: 45, b: 45 },
+      }, { responsive: true });
+
+      Plotly.react("resHistChart", [{
+        type: "histogram",
+        x: testPts.map((p) => p.residual_core),
+        nbinsx: 24,
+        marker: { color: "#0ea5e9" },
+      }], {
+        ...DARK_LAYOUT,
+        title: { text: "Test Residual Distribution", font: { size: 14 } },
+        xaxis: { ...DARK_LAYOUT.xaxis, title: "Residual (min)" },
+        yaxis: { ...DARK_LAYOUT.yaxis, title: "Count" },
+        margin: { l: 50, r: 20, t: 45, b: 45 },
+      }, { responsive: true });
+
+      const slices = BUNDLE.metrics.best_core_model.slice_errors_test;
+      [["Weather", "sliceWeatherChart"], ["Traffic_Level", "sliceTrafficChart"]].forEach(([key, el]) => {
+        const entries = Object.entries(slices[key]).sort((a, b) => a[1].mae - b[1].mae);
+        Plotly.react(el, [{
+          type: "bar", orientation: "h",
+          x: entries.map(([, v]) => v.mae),
+          y: entries.map(([k, v]) => `${k} (n=${v.count})`),
+          text: entries.map(([, v]) => v.mae.toFixed(2) + " min"),
+          textposition: "outside",
+          marker: { color: "#3b82f6" },
+        }], {
+          ...DARK_LAYOUT,
+          title: { text: `Test MAE by ${key.replace("_", " ")}`, font: { size: 14 } },
+          xaxis: { ...DARK_LAYOUT.xaxis, title: "Test MAE (min)", range: [0, Math.max(...entries.map(([, v]) => v.mae)) * 1.28] },
+          margin: { l: 115, r: 45, t: 45, b: 40 },
+        }, { responsive: true });
+      });
+    }
+
+    function renderImportanceChart(which) {
+      const list = (which === "core" ? BUNDLE.metrics.best_core_model : BUNDLE.metrics.full_benchmark_model).permutation_importance_test;
+      const sorted = [...list].sort((a, b) => a.mae_increase_mean - b.mae_increase_mean);
+      Plotly.react("importanceChart", [{
+        type: "bar", orientation: "h",
+        x: sorted.map((d) => d.mae_increase_mean),
+        y: sorted.map((d) => d.feature),
+        error_x: { type: "data", array: sorted.map((d) => d.mae_increase_std), visible: true, color: "#cbd5e1" },
+        text: sorted.map((d) => `+${d.mae_increase_mean.toFixed(2)} min`),
+        textposition: "outside",
+        marker: { color: which === "core" ? "#3b82f6" : "#10b981" },
+      }], {
+        ...DARK_LAYOUT,
+        xaxis: { ...DARK_LAYOUT.xaxis, title: "Increase in Test MAE When Feature Is Shuffled (min)" },
+        margin: { l: 170, r: 60, t: 25, b: 45 },
+      }, { responsive: true });
+    }
+
+    function setupBatchCsv() {
+      document.getElementById("downloadTemplateBtn").addEventListener("click", () => {
+        const sample = [
+          "Distance_km,Traffic_Level,Weather,Preparation_Time_min,Time_of_Day,Vehicle_Type,Courier_Experience_yrs",
+          "7.93,Low,Windy,12,Afternoon,Scooter,1.0",
+          "16.42,Medium,Clear,20,Evening,Bike,2.0",
+          "10.0,Medium,Rainy,15,Evening,Scooter,4.0",
+          "18.5,High,Snowy,25,Night,Car,3.0",
+        ].join("\n");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([sample], { type: "text/csv" }));
+        a.download = "sample_delivery_orders.csv";
+        a.click();
+      });
+
+      document.getElementById("csvUpload").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        const lines = text.trim().split(/\r?\n/).filter(Boolean);
+        const headers = lines[0].split(",").map((h) => h.trim());
+        const required = ["Distance_km", "Traffic_Level", "Weather", "Preparation_Time_min"];
+        const missing = required.filter((r) => !headers.includes(r));
+        if (missing.length) {
+          document.getElementById("batchStatus").textContent = "Missing required columns: " + missing.join(", ");
+          return;
+        }
+        const mode = document.getElementById("fullModeToggle").checked ? "full" : "core";
+        const outRows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const vals = lines[i].split(",").map((v) => v.trim());
+          const obj = {};
+          headers.forEach((h, idx) => (obj[h] = vals[idx]));
+          const pred = predictClientSide(obj, mode);
+          outRows.push({ ...obj, ...pred });
+        }
+        const outHeaders = Object.keys(outRows[0]);
+        LAST_BATCH_CSV = [outHeaders.join(","), ...outRows.map((r) => outHeaders.map((h) => r[h]).join(","))].join("\n");
+        document.getElementById("batchStatus").textContent = `Generated ${outRows.length} predictions using ${mode.toUpperCase()} mode.`;
+        document.getElementById("downloadPredsBtn").style.display = "inline-block";
+        document.getElementById("batchTableWrap").innerHTML = `<table><thead><tr>${outHeaders.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${outRows.slice(0, 20).map((r) => `<tr>${outHeaders.map((h) => `<td>${r[h]}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+      });
+
+      document.getElementById("downloadPredsBtn").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([LAST_BATCH_CSV], { type: "text/csv" }));
+        a.download = "delivery_predictions.csv";
+        a.click();
+      });
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+        window.dispatchEvent(new Event("resize"));
+      });
+    });
+
+    ["fullModeToggle", "distance", "prepTime", "traffic", "weather", "timeOfDay", "vehicle", "experience"].forEach((id) => {
+      document.getElementById(id).addEventListener("input", updatePrediction);
+      document.getElementById(id).addEventListener("change", updatePrediction);
+    });
+
+    document.querySelectorAll("#splitChips .chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        chip.classList.toggle("active");
+        renderAvpChart();
+      });
+    });
+
+    document.getElementById("impCoreBtn").addEventListener("click", () => {
+      document.getElementById("impCoreBtn").classList.add("active");
+      document.getElementById("impFullBtn").classList.remove("active");
+      renderImportanceChart("core");
+    });
+    document.getElementById("impFullBtn").addEventListener("click", () => {
+      document.getElementById("impFullBtn").classList.add("active");
+      document.getElementById("impCoreBtn").classList.remove("active");
+      renderImportanceChart("full");
+    });
+
+    fetch("data_bundle.json")
+      .then((r) => r.json())
+      .then((data) => {
+        BUNDLE = data;
+        updatePrediction();
+        renderStaticTabs();
+        setupBatchCsv();
+      });
+  </script>
+</body>
+</html>

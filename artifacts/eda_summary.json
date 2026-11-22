@@ -1,0 +1,260 @@
+{
+  "dataset_shape": {
+    "rows": 1000,
+    "columns": 9
+  },
+  "columns": [
+    "Order_ID",
+    "Distance_km",
+    "Weather",
+    "Traffic_Level",
+    "Time_of_Day",
+    "Vehicle_Type",
+    "Preparation_Time_min",
+    "Courier_Experience_yrs",
+    "Delivery_Time_min"
+  ],
+  "dtypes": {
+    "Order_ID": "int64",
+    "Distance_km": "float64",
+    "Weather": "str",
+    "Traffic_Level": "str",
+    "Time_of_Day": "str",
+    "Vehicle_Type": "str",
+    "Preparation_Time_min": "int64",
+    "Courier_Experience_yrs": "float64",
+    "Delivery_Time_min": "int64"
+  },
+  "missing_values": {
+    "Order_ID": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "Distance_km": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "Weather": {
+      "count": 30,
+      "pct": 3.0
+    },
+    "Traffic_Level": {
+      "count": 30,
+      "pct": 3.0
+    },
+    "Time_of_Day": {
+      "count": 30,
+      "pct": 3.0
+    },
+    "Vehicle_Type": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "Preparation_Time_min": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "Courier_Experience_yrs": {
+      "count": 30,
+      "pct": 3.0
+    },
+    "Delivery_Time_min": {
+      "count": 0,
+      "pct": 0.0
+    }
+  },
+  "total_missing_cells": 120,
+  "rows_with_any_missing": 117,
+  "duplicate_rows": 0,
+  "duplicate_order_ids": 0,
+  "numeric_summary": {
+    "Distance_km": {
+      "count": 1000,
+      "missing": 0,
+      "mean": 10.06,
+      "std": 5.6967,
+      "min": 0.59,
+      "q25": 5.105,
+      "median": 10.19,
+      "q75": 15.0175,
+      "max": 19.99,
+      "iqr": 9.9125,
+      "outlier_count_iqr": 0,
+      "skewness": 0.0388
+    },
+    "Preparation_Time_min": {
+      "count": 1000,
+      "missing": 0,
+      "mean": 16.982,
+      "std": 7.2046,
+      "min": 5.0,
+      "q25": 11.0,
+      "median": 17.0,
+      "q75": 23.0,
+      "max": 29.0,
+      "iqr": 12.0,
+      "outlier_count_iqr": 0,
+      "skewness": 0.03
+    },
+    "Courier_Experience_yrs": {
+      "count": 970,
+      "missing": 30,
+      "mean": 4.5794,
+      "std": 2.9144,
+      "min": 0.0,
+      "q25": 2.0,
+      "median": 5.0,
+      "q75": 7.0,
+      "max": 9.0,
+      "iqr": 5.0,
+      "outlier_count_iqr": 0,
+      "skewness": -0.0291
+    },
+    "Delivery_Time_min": {
+      "count": 1000,
+      "missing": 0,
+      "mean": 56.732,
+      "std": 22.0709,
+      "min": 8.0,
+      "q25": 41.0,
+      "median": 55.5,
+      "q75": 71.0,
+      "max": 153.0,
+      "iqr": 30.0,
+      "outlier_count_iqr": 6,
+      "skewness": 0.5073
+    }
+  },
+  "categorical_summary": {
+    "Weather": {
+      "missing": 30,
+      "unique": 5,
+      "value_counts": {
+        "Clear": 470,
+        "Rainy": 204,
+        "Foggy": 103,
+        "Snowy": 97,
+        "Windy": 96
+      }
+    },
+    "Traffic_Level": {
+      "missing": 30,
+      "unique": 3,
+      "value_counts": {
+        "Medium": 390,
+        "Low": 383,
+        "High": 197
+      }
+    },
+    "Time_of_Day": {
+      "missing": 30,
+      "unique": 4,
+      "value_counts": {
+        "Morning": 308,
+        "Evening": 293,
+        "Afternoon": 284,
+        "Night": 85
+      }
+    },
+    "Vehicle_Type": {
+      "missing": 0,
+      "unique": 3,
+      "value_counts": {
+        "Bike": 503,
+        "Scooter": 302,
+        "Car": 195
+      }
+    }
+  },
+  "anomalies": {
+    "delivery_lt_prep_count": 0,
+    "delivery_lt_prep_order_ids": [],
+    "non_positive_distance_count": 0,
+    "non_positive_delivery_count": 0,
+    "target_iqr_lower_fence": -4.0,
+    "target_iqr_upper_fence": 116.0,
+    "target_outlier_count": 6
+  },
+  "correlations_with_target": {
+    "Distance_km": {
+      "pearson": 0.781,
+      "spearman": 0.8165
+    },
+    "Preparation_Time_min": {
+      "pearson": 0.3073,
+      "spearman": 0.3055
+    },
+    "Courier_Experience_yrs": {
+      "pearson": -0.0904,
+      "spearman": -0.0867
+    },
+    "Traffic_Level_Ord": {
+      "pearson": 0.1903,
+      "spearman": 0.1818
+    }
+  },
+  "target_by_weather": {
+    "Clear": {
+      "count": 470,
+      "mean": 53.08,
+      "median": 52.0,
+      "std": 21.27
+    },
+    "Foggy": {
+      "count": 103,
+      "mean": 59.47,
+      "median": 59.0,
+      "std": 20.86
+    },
+    "Missing": {
+      "count": 30,
+      "mean": 54.2,
+      "median": 53.5,
+      "std": 23.46
+    },
+    "Rainy": {
+      "count": 204,
+      "mean": 59.79,
+      "median": 57.5,
+      "std": 22.82
+    },
+    "Snowy": {
+      "count": 97,
+      "mean": 67.11,
+      "median": 66.0,
+      "std": 21.29
+    },
+    "Windy": {
+      "count": 96,
+      "mean": 55.46,
+      "median": 55.0,
+      "std": 21.78
+    }
+  },
+  "target_by_traffic": {
+    "High": {
+      "count": 197,
+      "mean": 64.81,
+      "median": 65.0,
+      "std": 21.87
+    },
+    "Low": {
+      "count": 383,
+      "mean": 52.89,
+      "median": 51.0,
+      "std": 21.68
+    },
+    "Medium": {
+      "count": 390,
+      "mean": 56.02,
+      "median": 53.5,
+      "std": 21.19
+    },
+    "Missing": {
+      "count": 30,
+      "mean": 62.07,
+      "median": 60.0,
+      "std": 25.67
+    }
+  }
+}
